@@ -1,0 +1,284 @@
+import { Head, Link, router } from '@inertiajs/react';
+import { type User } from '@/types/auth';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MoreHorizontal, Edit, Trash2, Plus, ArrowUpDown, ChevronDown, ChevronUp, Search, Download } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useState, useEffect } from 'react';
+
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+interface PaginatedData {
+    data: User[];
+    links: PaginationLink[];
+    current_page: number;
+    last_page: number;
+    from: number;
+    to: number;
+    total: number;
+}
+
+interface Filters {
+    search?: string;
+    sort_field?: string;
+    sort_direction?: 'asc' | 'desc';
+    per_page?: string | number;
+}
+
+interface Props {
+    users: PaginatedData;
+    filters: Filters;
+}
+
+export default function UsersIndex({ users, filters }: Props) {
+    const [search, setSearch] = useState(filters.search || '');
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (search !== filters.search) {
+                router.get('/users', { search, sort_field: filters.sort_field, sort_direction: filters.sort_direction, per_page: filters.per_page }, { preserveState: true, preserveScroll: true, replace: true });
+            }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [search, filters.sort_field, filters.sort_direction, filters.per_page, filters.search]);
+
+    const handleSort = (field: string) => {
+        let direction: 'asc' | 'desc' = 'asc';
+        if (filters.sort_field === field && filters.sort_direction === 'asc') {
+            direction = 'desc';
+        }
+        router.get('/users', { search: filters.search, sort_field: field, sort_direction: direction, per_page: filters.per_page }, { preserveState: true, preserveScroll: true });
+    };
+
+    const handlePerPageChange = (value: string) => {
+        router.get('/users', { search: filters.search, sort_field: filters.sort_field, sort_direction: filters.sort_direction, per_page: value }, { preserveState: true, preserveScroll: true });
+    };
+
+    const handleExport = () => {
+        const params = new URLSearchParams();
+        if (filters.search) params.append('search', filters.search);
+        if (filters.sort_field) params.append('sort_field', filters.sort_field);
+        if (filters.sort_direction) params.append('sort_direction', filters.sort_direction);
+
+        window.location.href = `/users/export?${params.toString()}`;
+    };
+
+    const handleDelete = (id: number) => {
+        if (confirm('Are you sure you want to delete this user?')) {
+            router.delete(`/users/${id}`, { preserveScroll: true });
+        }
+    };
+
+    const renderSortIcon = (field: string) => {
+        if (filters.sort_field !== field) return <ArrowUpDown className="ml-2 h-4 w-4 text-muted-foreground" />;
+        if (filters.sort_direction === 'asc') return <ChevronUp className="ml-2 h-4 w-4" />;
+        return <ChevronDown className="ml-2 h-4 w-4" />;
+    };
+
+    return (
+        <>
+            <Head title="User Management" />
+            <div className="flex h-full flex-1 flex-col gap-6 overflow-hidden rounded-xl p-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-2xl font-bold tracking-tight">Users</h2>
+                        <p className="text-muted-foreground">
+                            Manage user data, roles, and access rights.
+                        </p>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button variant="outline" onClick={handleExport}>
+                            <Download className="mr-2 h-4 w-4" /> Export Excel
+                        </Button>
+                        <Button asChild>
+                            <Link href="/users/create">
+                                <Plus className="mr-2 h-4 w-4" /> Add User
+                            </Link>
+                        </Button>
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">Show</span>
+                        <Select defaultValue={String(filters.per_page || '5')} onValueChange={handlePerPageChange}>
+                            <SelectTrigger className="w-[80px]">
+                                <SelectValue placeholder="5" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="5">5</SelectItem>
+                                <SelectItem value="10">10</SelectItem>
+                                <SelectItem value="25">25</SelectItem>
+                                <SelectItem value="50">50</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <span className="text-sm text-muted-foreground">entries</span>
+                    </div>
+                    <div className="relative max-w-sm w-full">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            type="text"
+                            placeholder="Search users..."
+                            className="pl-8"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
+                </div>
+
+                <div className="border-sidebar-border/70 dark:border-sidebar-border bg-card text-card-foreground relative flex flex-col overflow-hidden rounded-xl border shadow-sm">
+                    <div className="w-full overflow-auto">
+                        <table className="w-full caption-bottom text-sm">
+                            <thead className="[&_tr]:border-b bg-muted/50 sticky top-0 z-10">
+                                <tr className="border-border transition-colors">
+                                    <th className="h-12 px-4 text-left align-middle font-medium cursor-pointer hover:bg-muted" onClick={() => handleSort('name')}>
+                                        <div className="flex items-center">
+                                            User {renderSortIcon('name')}
+                                        </div>
+                                    </th>
+                                    <th className="h-12 px-4 text-left align-middle font-medium cursor-pointer hover:bg-muted" onClick={() => handleSort('email')}>
+                                        <div className="flex items-center">
+                                            Email {renderSortIcon('email')}
+                                        </div>
+                                    </th>
+                                    <th className="h-12 px-4 text-left align-middle font-medium">
+                                        Status
+                                    </th>
+                                    <th className="h-12 px-4 text-left align-middle font-medium cursor-pointer hover:bg-muted" onClick={() => handleSort('created_at')}>
+                                        <div className="flex items-center">
+                                            Joined {renderSortIcon('created_at')}
+                                        </div>
+                                    </th>
+                                    <th className="h-12 px-4 text-left align-middle font-medium"></th>
+                                </tr>
+                            </thead>
+                            <tbody className="[&_tr:last-child]:border-0">
+                                {users.data.map((user) => (
+                                    <tr
+                                        key={user.id}
+                                        className="border-border hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors"
+                                    >
+                                        <td className="p-4 align-middle">
+                                            <div className="flex items-center gap-3">
+                                                <Avatar className="h-9 w-9">
+                                                    <AvatarImage src={user.avatar} alt={user.name} />
+                                                    <AvatarFallback>
+                                                        {user.name.substring(0, 2).toUpperCase()}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <div className="flex flex-col">
+                                                    <span className="font-medium">{user.name}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="p-4 align-middle">
+                                            {user.email}
+                                        </td>
+                                        <td className="p-4 align-middle">
+                                            {user.email_verified_at ? (
+                                                <Badge variant="default" className="bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 dark:text-emerald-400">Verified</Badge>
+                                            ) : (
+                                                <Badge variant="secondary">Pending</Badge>
+                                            )}
+                                        </td>
+                                        <td className="p-4 align-middle">
+                                            {new Date(user.created_at).toLocaleDateString('en-US', {
+                                                day: 'numeric',
+                                                month: 'short',
+                                                year: 'numeric',
+                                            })}
+                                        </td>
+                                        <td className="p-4 align-middle">
+                                            <div className="flex justify-end">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                                            <span className="sr-only">Open menu</span>
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem asChild>
+                                                            <Link href={`/users/${user.id}/edit`}>
+                                                                <Edit className="mr-2 h-4 w-4" />
+                                                                Edit
+                                                            </Link>
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            className="text-destructive focus:text-destructive cursor-pointer"
+                                                            onClick={() => handleDelete(user.id)}
+                                                        >
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            Delete
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {users.data.length === 0 && (
+                                    <tr>
+                                        <td colSpan={5} className="h-24 text-center text-muted-foreground">
+                                            No users found.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                    {/* Pagination */}
+                    {users.total > 0 && (
+                        <div className="border-t border-border p-4 flex items-center justify-between">
+                            <div className="text-sm text-muted-foreground">
+                                Showing <span className="font-medium">{users.from}</span> to <span className="font-medium">{users.to}</span> of{' '}
+                                <span className="font-medium">{users.total}</span> results
+                            </div>
+                            <div className="flex items-center gap-1">
+                                {users.links.map((link, i) => {
+                                    // Make "Previous" and "Next" rendering look better
+                                    let label = link.label;
+                                    if (label.includes('Previous')) label = '«';
+                                    if (label.includes('Next')) label = '»';
+
+                                    return (
+                                        <Button
+                                            key={i}
+                                            variant={link.active ? "default" : "outline"}
+                                            size="icon"
+                                            className="w-8 h-8"
+                                            asChild={!!link.url}
+                                            disabled={!link.url}
+                                        >
+                                            {link.url ? (
+                                                <Link href={link.url} dangerouslySetInnerHTML={{ __html: label }} preserveScroll preserveState />
+                                            ) : (
+                                                <span dangerouslySetInnerHTML={{ __html: label }} />
+                                            )}
+                                        </Button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </>
+    );
+}
+
+UsersIndex.layout = {
+    breadcrumbs: [
+        {
+            title: 'User Management',
+            href: '/users',
+        },
+    ],
+};
