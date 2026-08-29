@@ -18,11 +18,21 @@ class UserController extends Controller
         $sortField = $request->input('sort_field', 'created_at');
         $sortDirection = $request->input('sort_direction', 'desc');
         $perPage = $request->input('per_page', 5);
+        $status = $request->input('status');
 
         $users = User::query()
             ->when($search, function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%")
+                $query->where(function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
                       ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->when($status, function ($query, $status) {
+                if ($status === 'verified') {
+                    $query->whereNotNull('email_verified_at');
+                } elseif ($status === 'unverified') {
+                    $query->whereNull('email_verified_at');
+                }
             })
             ->orderBy($sortField, $sortDirection)
             ->paginate($perPage)
@@ -35,6 +45,7 @@ class UserController extends Controller
                 'sort_field' => $sortField,
                 'sort_direction' => $sortDirection,
                 'per_page' => $perPage,
+                'status' => $status,
             ],
         ]);
     }
@@ -47,11 +58,21 @@ class UserController extends Controller
         $search = $request->input('search');
         $sortField = $request->input('sort_field', 'created_at');
         $sortDirection = $request->input('sort_direction', 'desc');
+        $status = $request->input('status');
 
         $users = User::query()
             ->when($search, function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%")
+                $query->where(function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
                       ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->when($status, function ($query, $status) {
+                if ($status === 'verified') {
+                    $query->whereNotNull('email_verified_at');
+                } elseif ($status === 'unverified') {
+                    $query->whereNull('email_verified_at');
+                }
             })
             ->orderBy($sortField, $sortDirection)
             ->get();

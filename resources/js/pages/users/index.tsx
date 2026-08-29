@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MoreHorizontal, Edit, Trash2, Plus, ArrowUpDown, ChevronDown, ChevronUp, Search, Download } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Plus, ArrowUpDown, ChevronDown, ChevronUp, Search, Download, Filter } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useState, useEffect } from 'react';
@@ -31,6 +31,7 @@ interface Filters {
     sort_field?: string;
     sort_direction?: 'asc' | 'desc';
     per_page?: string | number;
+    status?: string;
 }
 
 interface Props {
@@ -45,22 +46,27 @@ export default function UsersIndex({ users, filters }: Props) {
     useEffect(() => {
         const timer = setTimeout(() => {
             if (search !== filters.search) {
-                router.get('/users', { search, sort_field: filters.sort_field, sort_direction: filters.sort_direction, per_page: filters.per_page }, { preserveState: true, preserveScroll: true, replace: true });
+                router.get('/users', { search, sort_field: filters.sort_field, sort_direction: filters.sort_direction, per_page: filters.per_page, status: filters.status }, { preserveState: true, preserveScroll: true, replace: true });
             }
         }, 300);
         return () => clearTimeout(timer);
-    }, [search, filters.sort_field, filters.sort_direction, filters.per_page, filters.search]);
+    }, [search, filters.sort_field, filters.sort_direction, filters.per_page, filters.status, filters.search]);
 
     const handleSort = (field: string) => {
         let direction: 'asc' | 'desc' = 'asc';
         if (filters.sort_field === field && filters.sort_direction === 'asc') {
             direction = 'desc';
         }
-        router.get('/users', { search: filters.search, sort_field: field, sort_direction: direction, per_page: filters.per_page }, { preserveState: true, preserveScroll: true });
+        router.get('/users', { search: filters.search, sort_field: field, sort_direction: direction, per_page: filters.per_page, status: filters.status }, { preserveState: true, preserveScroll: true });
     };
 
     const handlePerPageChange = (value: string) => {
-        router.get('/users', { search: filters.search, sort_field: filters.sort_field, sort_direction: filters.sort_direction, per_page: value }, { preserveState: true, preserveScroll: true });
+        router.get('/users', { search: filters.search, sort_field: filters.sort_field, sort_direction: filters.sort_direction, per_page: value, status: filters.status }, { preserveState: true, preserveScroll: true });
+    };
+
+    const handleStatusChange = (value: string) => {
+        const statusValue = value === 'all' ? undefined : value;
+        router.get('/users', { search: filters.search, sort_field: filters.sort_field, sort_direction: filters.sort_direction, per_page: filters.per_page, status: statusValue }, { preserveState: true, preserveScroll: true });
     };
 
     const handleExport = () => {
@@ -68,6 +74,7 @@ export default function UsersIndex({ users, filters }: Props) {
         if (filters.search) params.append('search', filters.search);
         if (filters.sort_field) params.append('sort_field', filters.sort_field);
         if (filters.sort_direction) params.append('sort_direction', filters.sort_direction);
+        if (filters.status) params.append('status', filters.status);
 
         window.location.href = `/users/export?${params.toString()}`;
     };
@@ -110,7 +117,7 @@ export default function UsersIndex({ users, filters }: Props) {
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">Show</span>
                         <Select defaultValue={String(filters.per_page || '5')} onValueChange={handlePerPageChange}>
@@ -126,15 +133,29 @@ export default function UsersIndex({ users, filters }: Props) {
                         </Select>
                         <span className="text-sm text-muted-foreground">entries</span>
                     </div>
-                    <div className="relative max-w-sm w-full">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            type="text"
-                            placeholder="Search users..."
-                            className="pl-8"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
+                    
+                    <div className="flex items-center gap-2">
+                        <Select defaultValue={filters.status || 'all'} onValueChange={handleStatusChange}>
+                            <SelectTrigger className="w-[140px]">
+                                <Filter className="w-4 h-4 mr-2" />
+                                <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Status</SelectItem>
+                                <SelectItem value="verified">Verified</SelectItem>
+                                <SelectItem value="unverified">Unverified</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <div className="relative w-full sm:max-w-sm">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                type="text"
+                                placeholder="Search users..."
+                                className="pl-8"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                        </div>
                     </div>
                 </div>
 
