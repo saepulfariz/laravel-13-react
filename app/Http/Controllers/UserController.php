@@ -56,6 +56,37 @@ class UserController extends Controller
             ->orderBy($sortField, $sortDirection)
             ->get();
 
+        $filename = "users_export_" . date('Y-m-d_His') . ".xlsx";
+        
+        $writer = \Spatie\SimpleExcel\SimpleExcelWriter::streamDownload($filename);
+
+        foreach ($users as $user) {
+            $writer->addRow([
+                'ID' => $user->id,
+                'Name' => $user->name,
+                'Email' => $user->email,
+                'Verified' => $user->email_verified_at ? 'Yes' : 'No',
+                'Created At' => $user->created_at ? clone $user->created_at : null,
+            ]);
+        }
+
+        return $writer->toBrowser();
+    }
+
+    public function export_csv(Request $request)
+    {
+        $search = $request->input('search');
+        $sortField = $request->input('sort_field', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
+
+        $users = User::query()
+            ->when($search, function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+            })
+            ->orderBy($sortField, $sortDirection)
+            ->get();
+
         $filename = "users_export_" . date('Y-m-d_His') . ".csv";
         $headers = [
             "Content-type"        => "text/csv",
