@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MoreHorizontal, Edit, Trash2, Plus, ArrowUpDown, ChevronDown, ChevronUp, Search, Download } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useState, useEffect } from 'react';
 
 interface PaginationLink {
@@ -39,6 +40,7 @@ interface Props {
 
 export default function UsersIndex({ users, filters }: Props) {
     const [search, setSearch] = useState(filters.search || '');
+    const [userToDelete, setUserToDelete] = useState<number | null>(null);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -70,9 +72,12 @@ export default function UsersIndex({ users, filters }: Props) {
         window.location.href = `/users/export?${params.toString()}`;
     };
 
-    const handleDelete = (id: number) => {
-        if (confirm('Are you sure you want to delete this user?')) {
-            router.delete(`/users/${id}`, { preserveScroll: true });
+    const confirmDelete = () => {
+        if (userToDelete !== null) {
+            router.delete(`/users/${userToDelete}`, { 
+                preserveScroll: true,
+                onSuccess: () => setUserToDelete(null)
+            });
         }
     };
 
@@ -213,7 +218,7 @@ export default function UsersIndex({ users, filters }: Props) {
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem
                                                             className="text-destructive focus:text-destructive cursor-pointer"
-                                                            onClick={() => handleDelete(user.id)}
+                                                            onClick={() => setUserToDelete(user.id)}
                                                         >
                                                             <Trash2 className="mr-2 h-4 w-4" />
                                                             Delete
@@ -270,6 +275,22 @@ export default function UsersIndex({ users, filters }: Props) {
                     )}
                 </div>
             </div>
+
+            <Dialog open={userToDelete !== null} onOpenChange={(open) => !open && setUserToDelete(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Are you absolutely sure?</DialogTitle>
+                        <DialogDescription>
+                            This action cannot be undone. This will permanently delete the user account
+                            and remove their data from our servers.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setUserToDelete(null)}>Cancel</Button>
+                        <Button variant="destructive" onClick={confirmDelete}>Delete</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }
