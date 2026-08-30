@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { type Role } from '@/types/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +37,8 @@ interface Props {
 }
 
 export default function RolesIndex({ roles, filters }: Props) {
+    const { auth } = usePage().props;
+    const permissions = auth.user.permissions || [];
     const [search, setSearch] = useState(filters.search || '');
     const [roleToDelete, setRoleToDelete] = useState<number | null>(null);
 
@@ -88,11 +90,13 @@ export default function RolesIndex({ roles, filters }: Props) {
                         </p>
                     </div>
                     <div className="flex gap-2">
-                        <Button asChild>
-                            <Link href="/roles/create">
-                                <Plus className="mr-2 h-4 w-4" /> Add Role
-                            </Link>
-                        </Button>
+                        {permissions.includes('roles.create') && (
+                            <Button asChild>
+                                <Link href="/roles/create">
+                                    <Plus className="mr-2 h-4 w-4" /> Add Role
+                                </Link>
+                            </Button>
+                        )}
                     </div>
                 </div>
 
@@ -180,31 +184,35 @@ export default function RolesIndex({ roles, filters }: Props) {
                                         </td>
                                         <td className="p-4 align-middle">
                                             <div className="flex justify-end">
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" className="h-8 w-8 p-0">
-                                                            <span className="sr-only">Open menu</span>
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem asChild>
-                                                            <Link href={`/roles/${role.id}/edit`}>
-                                                                <Edit className="mr-2 h-4 w-4" />
-                                                                Edit
-                                                            </Link>
-                                                        </DropdownMenuItem>
-                                                        {role.name.toLowerCase() !== 'admin' && role.name.toLowerCase() !== 'superadmin' && (
-                                                            <DropdownMenuItem
-                                                                className="text-destructive focus:text-destructive cursor-pointer"
-                                                                onClick={() => setRoleToDelete(role.id)}
-                                                            >
-                                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                                Delete
-                                                            </DropdownMenuItem>
-                                                        )}
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
+                                                {(permissions.includes('roles.edit') || permissions.includes('roles.delete')) && (
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                <span className="sr-only">Open menu</span>
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            {permissions.includes('roles.edit') && (
+                                                                <DropdownMenuItem asChild>
+                                                                    <Link href={`/roles/${role.id}/edit`}>
+                                                                        <Edit className="mr-2 h-4 w-4" />
+                                                                        Edit
+                                                                    </Link>
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                            {permissions.includes('roles.delete') && role.name.toLowerCase() !== 'admin' && role.name.toLowerCase() !== 'superadmin' && (
+                                                                <DropdownMenuItem
+                                                                    className="text-destructive focus:text-destructive cursor-pointer"
+                                                                    onClick={() => setRoleToDelete(role.id)}
+                                                                >
+                                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                                    Delete
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

@@ -1,15 +1,22 @@
 import { Head, useForm, Link } from '@inertiajs/react';
+import { type Role } from '@/types/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { FormEvent } from 'react';
 
-export default function CreateUser() {
+interface Props {
+    roles: Role[];
+}
+
+export default function CreateUser({ roles }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         email: '',
         password: '',
         password_confirmation: '',
+        roles: [] as string[],
     });
 
     const submit = (e: FormEvent) => {
@@ -72,6 +79,36 @@ export default function CreateUser() {
                                 onChange={(e) => setData('password_confirmation', e.target.value)}
                                 required
                             />
+                        </div>
+
+                        <div className="space-y-4">
+                            <Label>Assign Roles</Label>
+                            {roles.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">No roles available yet.</p>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 border rounded-md p-4">
+                                    {roles.map((role) => (
+                                        <div key={role.id} className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id={`role-${role.id}`}
+                                                checked={data.roles.includes(role.name)}
+                                                onCheckedChange={() => {
+                                                    const hasRole = data.roles.includes(role.name);
+                                                    if (hasRole) {
+                                                        setData('roles', data.roles.filter(r => r !== role.name));
+                                                    } else {
+                                                        setData('roles', [...data.roles, role.name]);
+                                                    }
+                                                }}
+                                            />
+                                            <Label htmlFor={`role-${role.id}`} className="font-normal cursor-pointer">
+                                                {role.name}
+                                            </Label>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {errors.roles && <p className="text-sm text-destructive">{errors.roles}</p>}
                         </div>
 
                         <div className="flex items-center gap-4">

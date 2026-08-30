@@ -6,9 +6,26 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class UserController extends Controller
+class UserController extends Controller implements HasMiddleware
 {
+    /**
+     * Define the middleware for this controller.
+     */
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('can:users.view', only: ['index', 'show', 'export']),
+            new Middleware('can:users.create', only: ['create', 'store']),
+            new Middleware('can:users.edit', only: ['edit', 'update']),
+            new Middleware('can:users.delete', only: ['destroy']),
+        ];
+    }
+
+
     /**
      * Display a listing of the users.
      */
@@ -20,7 +37,7 @@ class UserController extends Controller
         $perPage = $request->input('per_page', 5);
         $status = $request->input('status');
 
-        $users = User::query()
+        $users = User::with('roles')
             ->when($search, function ($query, $search) {
                 $query->where(function($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -143,7 +160,9 @@ class UserController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('users/create');
+        return Inertia::render('users/create', [
+            'roles' => Role::all()
+        ]);
     }
 
     /**
@@ -155,13 +174,16 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'roles' => ['nullable', 'array'],
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
         ]);
+        
+        $user->syncRoles($validated['roles'] ?? []);
 
         return redirect()->route('users.index')->with('success', 'User created successfully.');
     }
@@ -171,8 +193,10 @@ class UserController extends Controller
      */
     public function edit(User $user): Response
     {
+        $user->load('roles');
         return Inertia::render('users/edit', [
             'user' => $user,
+            'roles' => Role::all(),
         ]);
     }
 
@@ -185,6 +209,7 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class.',email,'.$user->id],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+            'roles' => ['nullable', 'array'],
         ]);
 
         $data = [
@@ -197,6 +222,7 @@ class UserController extends Controller
         }
 
         $user->update($data);
+        $user->syncRoles($validated['roles'] ?? []);
 
         return redirect()->route('users.index')->with('success', 'User updated successfully.');
     }

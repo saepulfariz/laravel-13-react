@@ -6,9 +6,21 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Permission;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class PermissionController extends Controller
+class PermissionController extends Controller implements HasMiddleware
 {
+
+     public static function middleware(): array
+    {
+        return [
+            new Middleware('can:permissions.view', only: ['index']),
+            new Middleware('can:permissions.create', only: ['create', 'store']),
+            new Middleware('can:permissions.edit', only: ['edit', 'update']),
+            new Middleware('can:permissions.delete', only: ['destroy']),
+        ];
+    }
     /**
      * Display a listing of the permissions.
      */

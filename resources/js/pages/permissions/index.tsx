@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { type Permission } from '@/types/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +37,8 @@ interface Props {
 }
 
 export default function PermissionsIndex({ permissions, filters }: Props) {
+    const { auth } = usePage().props;
+    const userPermissions = auth.user.permissions || [];
     const [search, setSearch] = useState(filters.search || '');
     const [permissionToDelete, setPermissionToDelete] = useState<number | null>(null);
 
@@ -88,11 +90,13 @@ export default function PermissionsIndex({ permissions, filters }: Props) {
                         </p>
                     </div>
                     <div className="flex gap-2">
-                        <Button asChild>
-                            <Link href="/permissions/create">
-                                <Plus className="mr-2 h-4 w-4" /> Add Permission
-                            </Link>
-                        </Button>
+                        {userPermissions.includes('permissions.create') && (
+                            <Button asChild>
+                                <Link href="/permissions/create">
+                                    <Plus className="mr-2 h-4 w-4" /> Add Permission
+                                </Link>
+                            </Button>
+                        )}
                     </div>
                 </div>
 
@@ -174,29 +178,35 @@ export default function PermissionsIndex({ permissions, filters }: Props) {
                                         </td>
                                         <td className="p-4 align-middle">
                                             <div className="flex justify-end">
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" className="h-8 w-8 p-0">
-                                                            <span className="sr-only">Open menu</span>
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem asChild>
-                                                            <Link href={`/permissions/${permission.id}/edit`}>
-                                                                <Edit className="mr-2 h-4 w-4" />
-                                                                Edit
-                                                            </Link>
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem
-                                                            className="text-destructive focus:text-destructive cursor-pointer"
-                                                            onClick={() => setPermissionToDelete(permission.id)}
-                                                        >
-                                                            <Trash2 className="mr-2 h-4 w-4" />
-                                                            Delete
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
+                                                {(userPermissions.includes('permissions.edit') || userPermissions.includes('permissions.delete')) && (
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                <span className="sr-only">Open menu</span>
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            {userPermissions.includes('permissions.edit') && (
+                                                                <DropdownMenuItem asChild>
+                                                                    <Link href={`/permissions/${permission.id}/edit`}>
+                                                                        <Edit className="mr-2 h-4 w-4" />
+                                                                        Edit
+                                                                    </Link>
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                            {userPermissions.includes('permissions.delete') && (
+                                                                <DropdownMenuItem
+                                                                    className="text-destructive focus:text-destructive cursor-pointer"
+                                                                    onClick={() => setPermissionToDelete(permission.id)}
+                                                                >
+                                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                                    Delete
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

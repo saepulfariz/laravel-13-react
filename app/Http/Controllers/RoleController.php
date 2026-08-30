@@ -7,9 +7,22 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class RoleController extends Controller
+class RoleController extends Controller implements HasMiddleware
 {
+
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('can:roles.view', only: ['index']),
+            new Middleware('can:roles.create', only: ['create', 'store']),
+            new Middleware('can:roles.edit', only: ['edit', 'update']),
+            new Middleware('can:roles.delete', only: ['destroy']),
+        ];
+    }
+    
     /**
      * Display a listing of the roles.
      */

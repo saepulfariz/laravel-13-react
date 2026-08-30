@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { type User } from '@/types/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -40,6 +40,8 @@ interface Props {
 }
 
 export default function UsersIndex({ users, filters }: Props) {
+    const { auth } = usePage().props;
+    const permissions = auth.user.permissions || [];
     const [search, setSearch] = useState(filters.search || '');
     const [userToDelete, setUserToDelete] = useState<number | null>(null);
 
@@ -106,14 +108,18 @@ export default function UsersIndex({ users, filters }: Props) {
                         </p>
                     </div>
                     <div className="flex gap-2">
-                        <Button variant="outline" onClick={handleExport}>
-                            <Download className="mr-2 h-4 w-4" /> Export Excel
-                        </Button>
-                        <Button asChild>
-                            <Link href="/users/create">
-                                <Plus className="mr-2 h-4 w-4" /> Add User
-                            </Link>
-                        </Button>
+                        {permissions.includes('users.view') && (
+                            <Button variant="outline" onClick={handleExport}>
+                                <Download className="mr-2 h-4 w-4" /> Export Excel
+                            </Button>
+                        )}
+                        {permissions.includes('users.create') && (
+                            <Button asChild>
+                                <Link href="/users/create">
+                                    <Plus className="mr-2 h-4 w-4" /> Add User
+                                </Link>
+                            </Button>
+                        )}
                     </div>
                 </div>
 
@@ -175,6 +181,9 @@ export default function UsersIndex({ users, filters }: Props) {
                                         </div>
                                     </th>
                                     <th className="h-12 px-4 text-left align-middle font-medium">
+                                        Roles
+                                    </th>
+                                    <th className="h-12 px-4 text-left align-middle font-medium">
                                         Status
                                     </th>
                                     <th className="h-12 px-4 text-left align-middle font-medium cursor-pointer hover:bg-muted" onClick={() => handleSort('created_at')}>
@@ -208,6 +217,17 @@ export default function UsersIndex({ users, filters }: Props) {
                                             {user.email}
                                         </td>
                                         <td className="p-4 align-middle">
+                                            <div className="flex flex-wrap gap-1">
+                                                {user.roles && user.roles.length > 0 ? (
+                                                    user.roles.map(role => (
+                                                        <Badge key={role.id} variant="outline" className="font-normal">{role.name}</Badge>
+                                                    ))
+                                                ) : (
+                                                    <span className="text-muted-foreground italic text-xs">None</span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="p-4 align-middle">
                                             {user.email_verified_at ? (
                                                 <Badge variant="default" className="bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 dark:text-emerald-400">Verified</Badge>
                                             ) : (
@@ -223,36 +243,42 @@ export default function UsersIndex({ users, filters }: Props) {
                                         </td>
                                         <td className="p-4 align-middle">
                                             <div className="flex justify-end">
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" className="h-8 w-8 p-0">
-                                                            <span className="sr-only">Open menu</span>
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem asChild>
-                                                            <Link href={`/users/${user.id}/edit`}>
-                                                                <Edit className="mr-2 h-4 w-4" />
-                                                                Edit
-                                                            </Link>
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem
-                                                            className="text-destructive focus:text-destructive cursor-pointer"
-                                                            onClick={() => setUserToDelete(user.id)}
-                                                        >
-                                                            <Trash2 className="mr-2 h-4 w-4" />
-                                                            Delete
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
+                                                {(permissions.includes('users.edit') || permissions.includes('users.delete')) && (
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                <span className="sr-only">Open menu</span>
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            {permissions.includes('users.edit') && (
+                                                                <DropdownMenuItem asChild>
+                                                                    <Link href={`/users/${user.id}/edit`}>
+                                                                        <Edit className="mr-2 h-4 w-4" />
+                                                                        Edit
+                                                                    </Link>
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                            {permissions.includes('users.delete') && (
+                                                                <DropdownMenuItem
+                                                                    className="text-destructive focus:text-destructive cursor-pointer"
+                                                                    onClick={() => setUserToDelete(user.id)}
+                                                                >
+                                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                                    Delete
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
                                 ))}
                                 {users.data.length === 0 && (
                                     <tr>
-                                        <td colSpan={5} className="h-24 text-center text-muted-foreground">
+                                        <td colSpan={6} className="h-24 text-center text-muted-foreground">
                                             No users found.
                                         </td>
                                     </tr>
