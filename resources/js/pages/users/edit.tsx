@@ -12,17 +12,21 @@ interface Props {
 }
 
 export default function EditUser({ user, roles }: Props) {
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, post, processing, errors } = useForm({
+        _method: 'put',
         name: user.name,
+        username: user.username || '',
         email: user.email,
         password: '',
         password_confirmation: '',
         roles: user.roles?.map(r => r.name) || [],
+        is_active: !!user.is_active,
+        image: null as File | null,
     });
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
-        put(`/users/${user.id}`);
+        post(`/users/${user.id}`);
     };
 
     return (
@@ -48,6 +52,16 @@ export default function EditUser({ user, roles }: Props) {
                         </div>
 
                         <div className="space-y-2">
+                            <Label htmlFor="username">Username (Optional)</Label>
+                            <Input
+                                id="username"
+                                value={data.username}
+                                onChange={(e) => setData('username', e.target.value)}
+                            />
+                            {errors.username && <p className="text-sm text-destructive">{errors.username}</p>}
+                        </div>
+
+                        <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
                             <Input
                                 id="email"
@@ -57,6 +71,35 @@ export default function EditUser({ user, roles }: Props) {
                                 required
                             />
                             {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                            <Checkbox
+                                id="is_active"
+                                checked={data.is_active}
+                                onCheckedChange={(checked) => setData('is_active', checked as boolean)}
+                            />
+                            <Label htmlFor="is_active" className="cursor-pointer">
+                                Active User
+                            </Label>
+                        </div>
+                        {errors.is_active && <p className="text-sm text-destructive">{errors.is_active}</p>}
+
+                        <div className="space-y-2">
+                            <Label htmlFor="image">Profile Image (Optional)</Label>
+                            {user.image && (
+                                <div className="mb-2">
+                                    <img src={`/storage/${user.image}`} alt="Profile" className="w-16 h-16 rounded-full object-cover" />
+                                </div>
+                            )}
+                            <Input
+                                id="image"
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => setData('image', e.target.files?.[0] || null)}
+                            />
+                            {errors.image && <p className="text-sm text-destructive">{errors.image}</p>}
+                            <p className="text-xs text-muted-foreground">Upload a new image to replace the existing one.</p>
                         </div>
 
                         <div className="space-y-4">

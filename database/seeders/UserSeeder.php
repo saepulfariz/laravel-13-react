@@ -18,8 +18,8 @@ class UserSeeder extends Seeder
             ['email' => 'super@admin.com'],
             [
                 'name' => 'Super Admin',
-                // 'username' => 'superadmin',
-                // 'is_active' => 1,
+                'username' => 'superadmin',
+                'is_active' => 1,
                 'password' => Hash::make('password')
             ]
         );

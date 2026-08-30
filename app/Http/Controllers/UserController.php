@@ -41,7 +41,8 @@ class UserController extends Controller implements HasMiddleware
             ->when($search, function ($query, $search) {
                 $query->where(function($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('username', 'like', "%{$search}%");
                 });
             })
             ->when($status, function ($query, $status) {
@@ -81,7 +82,8 @@ class UserController extends Controller implements HasMiddleware
             ->when($search, function ($query, $search) {
                 $query->where(function($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('username', 'like', "%{$search}%");
                 });
             })
             ->when($status, function ($query, $status) {
@@ -172,14 +174,25 @@ class UserController extends Controller implements HasMiddleware
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'username' => ['nullable', 'string', 'max:255', 'unique:'.User::class],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'roles' => ['nullable', 'array'],
+            'is_active' => ['nullable', 'boolean'],
+            'image' => ['nullable', 'image', 'max:2048'], // 2MB Max
         ]);
+
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('users', 'public');
+        }
 
         $user = User::create([
             'name' => $validated['name'],
+            'username' => $validated['username'] ?? null,
             'email' => $validated['email'],
+            'is_active' => $validated['is_active'] ?? 1,
+            'image' => $imagePath,
             'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
         ]);
         
@@ -207,15 +220,27 @@ class UserController extends Controller implements HasMiddleware
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'username' => ['nullable', 'string', 'max:255', 'unique:'.User::class.',username,'.$user->id],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class.',email,'.$user->id],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'roles' => ['nullable', 'array'],
+            'is_active' => ['nullable', 'boolean'],
+            'image' => ['nullable', 'image', 'max:2048'],
         ]);
 
         $data = [
             'name' => $validated['name'],
+            'username' => $validated['username'] ?? null,
             'email' => $validated['email'],
+            'is_active' => $validated['is_active'] ?? 1,
         ];
+
+        if ($request->hasFile('image')) {
+            if ($user->image) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->image);
+            }
+            $data['image'] = $request->file('image')->store('users', 'public');
+        }
 
         if (!empty($validated['password'])) {
             $data['password'] = \Illuminate\Support\Facades\Hash::make($validated['password']);
@@ -232,6 +257,9 @@ class UserController extends Controller implements HasMiddleware
      */
     public function destroy(User $user)
     {
+        if ($user->image) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($user->image);
+        }
         $user->delete();
 
         return redirect()->route('users.index')->with('success', 'User deleted successfully.');

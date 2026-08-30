@@ -203,13 +203,14 @@ export default function UsersIndex({ users, filters }: Props) {
                                         <td className="p-4 align-middle">
                                             <div className="flex items-center gap-3">
                                                 <Avatar className="h-9 w-9">
-                                                    <AvatarImage src={user.avatar} alt={user.name} />
+                                                    <AvatarImage src={user.image ? `/storage/${user.image}` : user.avatar} alt={user.name} />
                                                     <AvatarFallback>
                                                         {user.name.substring(0, 2).toUpperCase()}
                                                     </AvatarFallback>
                                                 </Avatar>
                                                 <div className="flex flex-col">
                                                     <span className="font-medium">{user.name}</span>
+                                                    {user.username && <span className="text-xs text-muted-foreground">@{user.username}</span>}
                                                 </div>
                                             </div>
                                         </td>
@@ -228,11 +229,18 @@ export default function UsersIndex({ users, filters }: Props) {
                                             </div>
                                         </td>
                                         <td className="p-4 align-middle">
-                                            {user.email_verified_at ? (
-                                                <Badge variant="default" className="bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 dark:text-emerald-400">Verified</Badge>
-                                            ) : (
-                                                <Badge variant="secondary">Pending</Badge>
-                                            )}
+                                            <div className="flex flex-col gap-1 items-start">
+                                                {user.is_active ? (
+                                                    <Badge variant="default" className="bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 dark:text-emerald-400">Active</Badge>
+                                                ) : (
+                                                    <Badge variant="secondary" className="text-destructive">Inactive</Badge>
+                                                )}
+                                                {user.email_verified_at ? (
+                                                    <Badge variant="outline" className="text-xs font-normal">Verified</Badge>
+                                                ) : (
+                                                    <Badge variant="outline" className="text-xs font-normal text-muted-foreground">Pending</Badge>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="p-4 align-middle">
                                             {new Date(user.created_at).toLocaleDateString('en-US', {

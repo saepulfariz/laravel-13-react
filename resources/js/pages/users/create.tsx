@@ -13,10 +13,13 @@ interface Props {
 export default function CreateUser({ roles }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
+        username: '',
         email: '',
         password: '',
         password_confirmation: '',
         roles: [] as string[],
+        is_active: true,
+        image: null as File | null,
     });
 
     const submit = (e: FormEvent) => {
@@ -47,6 +50,16 @@ export default function CreateUser({ roles }: Props) {
                         </div>
 
                         <div className="space-y-2">
+                            <Label htmlFor="username">Username (Optional)</Label>
+                            <Input
+                                id="username"
+                                value={data.username}
+                                onChange={(e) => setData('username', e.target.value)}
+                            />
+                            {errors.username && <p className="text-sm text-destructive">{errors.username}</p>}
+                        </div>
+
+                        <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
                             <Input
                                 id="email"
@@ -56,6 +69,29 @@ export default function CreateUser({ roles }: Props) {
                                 required
                             />
                             {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                            <Checkbox
+                                id="is_active"
+                                checked={data.is_active}
+                                onCheckedChange={(checked) => setData('is_active', checked as boolean)}
+                            />
+                            <Label htmlFor="is_active" className="cursor-pointer">
+                                Active User
+                            </Label>
+                        </div>
+                        {errors.is_active && <p className="text-sm text-destructive">{errors.is_active}</p>}
+
+                        <div className="space-y-2">
+                            <Label htmlFor="image">Profile Image (Optional)</Label>
+                            <Input
+                                id="image"
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => setData('image', e.target.files?.[0] || null)}
+                            />
+                            {errors.image && <p className="text-sm text-destructive">{errors.image}</p>}
                         </div>
 
                         <div className="space-y-2">
