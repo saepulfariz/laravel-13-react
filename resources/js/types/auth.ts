@@ -1,3 +1,18 @@
+export type Permission = {
+    id: number;
+    name: string;
+    created_at: string;
+    updated_at: string;
+};
+
+export type Role = {
+    id: number;
+    name: string;
+    created_at: string;
+    updated_at: string;
+    permissions: Permission[];
+};
+
 export type User = {
     id: number;
     name: string;
@@ -5,6 +20,7 @@ export type User = {
     avatar?: string;
     email_verified_at: string | null;
     two_factor_enabled?: boolean;
+    roles?: Role[];
     created_at: string;
     updated_at: string;
     [key: string]: unknown;
