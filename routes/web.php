@@ -23,6 +23,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('users', UserController::class);
     Route::resource('roles', RoleController::class);
     Route::resource('permissions', PermissionController::class);
+    Route::resource('sso-providers', App\Http\Controllers\SsoProviderController::class);
 });
 
 require __DIR__.'/settings.php';

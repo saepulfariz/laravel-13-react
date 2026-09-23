@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+
+    'ldap' => [
+        'client_id' => env('LDAP_CLIENT_ID'),
+        'client_secret' => env('LDAP_CLIENT_SECRET'),
+        'redirect' => env('LDAP_REDIRECT_URL', '/auth/ldap/callback'),
+        'base_uri' => env('LDAP_BASE_URI'),
+    ],
 ];

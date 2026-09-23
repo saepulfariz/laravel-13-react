@@ -1,9 +1,17 @@
-import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid, Users, Shield, Key } from 'lucide-react';
-import AppLogo from '@/components/app-logo';
-import { NavFooter } from '@/components/nav-footer';
-import { NavMain } from '@/components/nav-main';
-import { NavUser } from '@/components/nav-user';
+import { Link, usePage } from "@inertiajs/react";
+import {
+    BookOpen,
+    FolderGit2,
+    LayoutGrid,
+    Users,
+    Shield,
+    Key,
+    Fingerprint,
+} from "lucide-react";
+import AppLogo from "@/components/app-logo";
+import { NavFooter } from "@/components/nav-footer";
+import { NavMain } from "@/components/nav-main";
+import { NavUser } from "@/components/nav-user";
 import {
     Sidebar,
     SidebarContent,
@@ -12,19 +20,19 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-} from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
-import type { NavItem } from '@/types';
+} from "@/components/ui/sidebar";
+import { dashboard } from "@/routes";
+import type { NavItem } from "@/types";
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
+        title: "Repository",
+        href: "https://github.com/laravel/react-starter-kit",
         icon: FolderGit2,
     },
     {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
+        title: "Documentation",
+        href: "https://laravel.com/docs/starter-kits#react",
         icon: BookOpen,
     },
 ];
@@ -35,25 +43,46 @@ export function AppSidebar() {
 
     const mainNavItems = [
         {
-            title: 'Dashboard',
+            title: "Dashboard",
             href: dashboard(),
             icon: LayoutGrid,
         },
-        ...(permissions.includes('users.view') ? [{
-            title: 'Users',
-            href: '/users',
-            icon: Users,
-        }] : []),
-        ...(permissions.includes('roles.view') ? [{
-            title: 'Roles',
-            href: '/roles',
-            icon: Shield,
-        }] : []),
-        ...(permissions.includes('permissions.view') ? [{
-            title: 'Permissions',
-            href: '/permissions',
-            icon: Key,
-        }] : []),
+        ...(permissions.includes("users.view")
+            ? [
+                  {
+                      title: "Users",
+                      href: "/users",
+                      icon: Users,
+                  },
+              ]
+            : []),
+        ...(permissions.includes("roles.view")
+            ? [
+                  {
+                      title: "Roles",
+                      href: "/roles",
+                      icon: Shield,
+                  },
+              ]
+            : []),
+        ...(permissions.includes("permissions.view")
+            ? [
+                  {
+                      title: "Permissions",
+                      href: "/permissions",
+                      icon: Key,
+                  },
+              ]
+            : []),
+        ...(permissions.includes("sso-providers.view")
+            ? [
+                  {
+                      title: "SSO Providers",
+                      href: "/sso-providers",
+                      icon: Fingerprint,
+                  },
+              ]
+            : []),
     ];
 
     return (
