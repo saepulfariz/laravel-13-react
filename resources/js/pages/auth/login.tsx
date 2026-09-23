@@ -1,23 +1,35 @@
-import { Form, Head } from '@inertiajs/react';
-import InputError from '@/components/input-error';
-import PasswordInput from '@/components/password-input';
-import TextLink from '@/components/text-link';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
-import { register } from '@/routes';
-import { store } from '@/routes/login';
-import { request } from '@/routes/password';
-import PasskeyVerify from '@/components/passkey-verify';
+import { Form, Head } from "@inertiajs/react";
+import InputError from "@/components/input-error";
+import PasswordInput from "@/components/password-input";
+import TextLink from "@/components/text-link";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
+import { register } from "@/routes";
+import { store } from "@/routes/login";
+import { request } from "@/routes/password";
+import PasskeyVerify from "@/components/passkey-verify";
+
+type SsoProvider = {
+    id: number;
+    code: string;
+    name: string;
+    icon: string | null;
+};
 
 type Props = {
     status?: string;
     canResetPassword: boolean;
+    ssoProviders?: SsoProvider[];
 };
 
-export default function Login({ status, canResetPassword }: Props) {
+export default function Login({
+    status,
+    canResetPassword,
+    ssoProviders = [],
+}: Props) {
     return (
         <>
             <Head title="Log in" />
@@ -26,7 +38,7 @@ export default function Login({ status, canResetPassword }: Props) {
 
             <Form
                 {...store.form()}
-                resetOnSuccess={['password']}
+                resetOnSuccess={["password"]}
                 className="flex flex-col gap-6"
             >
                 {({ processing, errors }) => (
@@ -92,8 +104,39 @@ export default function Login({ status, canResetPassword }: Props) {
                             </Button>
                         </div>
 
+                        {ssoProviders.length > 0 && (
+                            <div className="grid gap-4">
+                                <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
+                                    <span className="relative z-10 bg-background px-2 text-muted-foreground">
+                                        Or continue with
+                                    </span>
+                                </div>
+                                <div className="grid gap-2 sm:grid-cols-1">
+                                    {ssoProviders.map((provider) => (
+                                        <Button
+                                            key={provider.id}
+                                            variant="outline"
+                                            asChild
+                                            className="cursor-pointer"
+                                        >
+                                            <a
+                                                href={`/auth/${provider.code}/login`}
+                                            >
+                                                {provider.icon && (
+                                                    <i
+                                                        className={`${provider.icon} mr-2`}
+                                                    />
+                                                )}
+                                                Login with {provider.name}
+                                            </a>
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         <div className="text-muted-foreground text-center text-sm">
-                            Don't have an account?{' '}
+                            Don't have an account?{" "}
                             <TextLink href={register()} tabIndex={5}>
                                 Sign up
                             </TextLink>
@@ -112,6 +155,6 @@ export default function Login({ status, canResetPassword }: Props) {
 }
 
 Login.layout = {
-    title: 'Log in to your account',
-    description: 'Enter your email or username and password below to log in',
+    title: "Log in to your account",
+    description: "Enter your email or username and password below to log in",
 };

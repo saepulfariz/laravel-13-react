@@ -24,6 +24,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('roles', RoleController::class);
     Route::resource('permissions', PermissionController::class);
     Route::resource('sso-providers', App\Http\Controllers\SsoProviderController::class);
+
+    // SSO Unlink
+    Route::delete('auth/{provider}/unlink', [App\Http\Controllers\SsoController::class, 'unlinkProvider'])->name('sso.unlink');
 });
 
-require __DIR__.'/settings.php';
+// SSO Auth Routes
+Route::get('auth/{provider}/login', [App\Http\Controllers\SsoController::class, 'redirectToProvider'])->name('sso.login');
+Route::get('auth/{provider}/callback', [App\Http\Controllers\SsoController::class, 'handleProviderCallback'])->name('sso.callback');
+
+require __DIR__ . '/settings.php';

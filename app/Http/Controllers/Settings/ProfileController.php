@@ -19,9 +19,14 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $ssoProviders = \App\Models\SsoProvider::where('is_active', true)->get(['id', 'code', 'name', 'icon']);
+        $linkedSsoProviders = \App\Models\UserSsoAccount::where('user_id', $request->user()->id)->pluck('sso_provider_id')->toArray();
+
         return Inertia::render('settings/profile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
+            'ssoProviders' => $ssoProviders,
+            'linkedSsoProviders' => $linkedSsoProviders,
         ]);
     }
 

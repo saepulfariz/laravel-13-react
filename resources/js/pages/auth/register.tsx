@@ -1,25 +1,33 @@
-import { Form, Head } from '@inertiajs/react';
-import InputError from '@/components/input-error';
-import PasswordInput from '@/components/password-input';
-import TextLink from '@/components/text-link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
-import { login } from '@/routes';
-import { store } from '@/routes/register';
+import { Form, Head } from "@inertiajs/react";
+import InputError from "@/components/input-error";
+import PasswordInput from "@/components/password-input";
+import TextLink from "@/components/text-link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
+import { login } from "@/routes";
+import { store } from "@/routes/register";
+
+type SsoProvider = {
+    id: number;
+    code: string;
+    name: string;
+    icon: string | null;
+};
 
 type Props = {
     passwordRules: string;
+    ssoProviders?: SsoProvider[];
 };
 
-export default function Register({ passwordRules }: Props) {
+export default function Register({ passwordRules, ssoProviders = [] }: Props) {
     return (
         <>
             <Head title="Register" />
             <Form
                 {...store.form()}
-                resetOnSuccess={['password', 'password_confirmation']}
+                resetOnSuccess={["password", "password_confirmation"]}
                 disableWhileProcessing
                 className="flex flex-col gap-6"
             >
@@ -118,8 +126,39 @@ export default function Register({ passwordRules }: Props) {
                             </Button>
                         </div>
 
+                        {ssoProviders.length > 0 && (
+                            <div className="grid gap-4">
+                                <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
+                                    <span className="relative z-10 bg-background px-2 text-muted-foreground">
+                                        Or continue with
+                                    </span>
+                                </div>
+                                <div className="grid gap-2 sm:grid-cols-1">
+                                    {ssoProviders.map((provider) => (
+                                        <Button
+                                            key={provider.id}
+                                            variant="outline"
+                                            asChild
+                                            className="cursor-pointer"
+                                        >
+                                            <a
+                                                href={`/auth/${provider.code}/login`}
+                                            >
+                                                {provider.icon && (
+                                                    <i
+                                                        className={`${provider.icon} mr-2`}
+                                                    />
+                                                )}
+                                                Login with {provider.name}
+                                            </a>
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         <div className="text-muted-foreground text-center text-sm">
-                            Already have an account?{' '}
+                            Already have an account?{" "}
                             <TextLink href={login()} tabIndex={7}>
                                 Log in
                             </TextLink>
@@ -132,6 +171,6 @@ export default function Register({ passwordRules }: Props) {
 }
 
 Register.layout = {
-    title: 'Create an account',
-    description: 'Enter your details below to create your account',
+    title: "Create an account",
+    description: "Enter your details below to create your account",
 };
