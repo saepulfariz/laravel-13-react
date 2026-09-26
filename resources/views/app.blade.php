@@ -42,6 +42,9 @@
     <x-inertia::head>
         <title>{{ app(\App\Settings\GeneralSettings::class)->app_title ?: config('app.name', 'Laravel') }}</title>
     </x-inertia::head>
+    <script>
+        window.APP_NAME = "{{ app(\App\Settings\GeneralSettings::class)->app_title ?: config('app.name', 'Laravel') }}";
+    </script>
 </head>
 
 <body class="font-sans antialiased">
