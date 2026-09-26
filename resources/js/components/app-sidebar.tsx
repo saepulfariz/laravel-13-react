@@ -7,6 +7,7 @@ import {
     Shield,
     Key,
     Fingerprint,
+    Settings,
 } from "lucide-react";
 import AppLogo from "@/components/app-logo";
 import { NavFooter } from "@/components/nav-footer";
@@ -80,6 +81,15 @@ export function AppSidebar() {
                       title: "SSO Providers",
                       href: "/sso-providers",
                       icon: Fingerprint,
+                  },
+              ]
+            : []),
+        ...(permissions.includes("settings.view")
+            ? [
+                  {
+                      title: "App Settings",
+                      href: "/settings/app",
+                      icon: Settings,
                   },
               ]
             : []),

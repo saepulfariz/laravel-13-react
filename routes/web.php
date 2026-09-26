@@ -27,6 +27,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // SSO Unlink
     Route::delete('auth/{provider}/unlink', [App\Http\Controllers\SsoController::class, 'unlinkProvider'])->name('sso.unlink');
+
+    Route::get('settings/app', [\App\Http\Controllers\SettingsController::class, 'edit'])->name('settings.edit');
+    Route::post('settings/app', [\App\Http\Controllers\SettingsController::class, 'update'])->name('settings.update');
 });
 
 // SSO Auth Routes
