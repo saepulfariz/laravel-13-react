@@ -1,0 +1,13 @@
+Get Settings in view react
+
+import { usePage } from '@inertiajs/react';
+export default function MyComponent() {
+    // Ambil data settings dari props global
+    const { settings } = usePage().props;
+    return (
+        <div>
+            <h1>Nama Aplikasi: {settings.app_title}</h1>
+            <p>Perusahaan: {settings.company_name}</p>
+        </div>
+    );
+}
