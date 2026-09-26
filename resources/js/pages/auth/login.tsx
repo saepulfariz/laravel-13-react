@@ -1,4 +1,4 @@
-import { Form, Head } from "@inertiajs/react";
+import { Form, Head, usePage } from "@inertiajs/react";
 import InputError from "@/components/input-error";
 import PasswordInput from "@/components/password-input";
 import TextLink from "@/components/text-link";
@@ -30,6 +30,8 @@ export default function Login({
     canResetPassword,
     ssoProviders = [],
 }: Props) {
+    const { settings } = usePage().props;
+
     return (
         <>
             <Head title="Log in" />
@@ -135,12 +137,14 @@ export default function Login({
                             </div>
                         )}
 
-                        <div className="text-muted-foreground text-center text-sm">
-                            Don't have an account?{" "}
-                            <TextLink href={register()} tabIndex={5}>
-                                Sign up
-                            </TextLink>
-                        </div>
+                        {settings.allow_registration && (
+                            <div className="text-muted-foreground text-center text-sm">
+                                Don't have an account?{" "}
+                                <TextLink href={register()} tabIndex={5}>
+                                    Sign up
+                                </TextLink>
+                            </div>
+                        )}
                     </>
                 )}
             </Form>

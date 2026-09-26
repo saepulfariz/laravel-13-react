@@ -19,9 +19,12 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
+        if (! app(\App\Settings\GeneralSettings::class)->allow_registration) {
+            abort(403, 'Pendaftaran pengguna baru saat ini ditutup.');
+        }
         Validator::make($input, [
             ...$this->profileRules(),
-            'username' => ['required', 'string', 'max:255', 'unique:'.User::class],
+            'username' => ['required', 'string', 'max:255', 'unique:' . User::class],
             'password' => $this->passwordRules(),
         ])->validate();
 
